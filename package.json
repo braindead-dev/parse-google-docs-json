@@ -1,6 +1,6 @@
 {
   "name": "parse-google-docs-json",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "This Node.js module authenticates with Google API and parse Google Docs to human-readable JSON or Markdown.",
   "main": "source/index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   "homepage": "https://github.com/filipedeschamps/parse-google-docs-json#readme",
   "typings": "index.d.ts",
   "dependencies": {
-    "googleapis": "59.0.0",
+    "googleapis": "148.0.0",
     "json2md": "1.7.1",
     "lodash.get": "4.4.2",
     "lodash.last": "3.0.0",
