@@ -1,14 +1,9 @@
-const googleapis = require("googleapis");
-const { google } = googleapis;
+const { google } = require("googleapis");
 
 const {
   convertGoogleDocumentToJson,
   convertJsonToMarkdown,
 } = require("./parser.js");
-
-const docs = google.docs({
-  version: "v1",
-});
 
 async function parseGoogleDocs(configuration = {}) {
   const clientEmail =
@@ -30,10 +25,15 @@ async function parseGoogleDocs(configuration = {}) {
     throw new Error('Please, provide "documentId" in the constructor');
   }
 
-  const jwt = new google.auth.JWT(clientEmail, null, privateKey, scopes);
+  const auth = new google.auth.JWT({
+    email: clientEmail,
+    key: privateKey,
+    scopes: scopes,
+  });
+
+  const docs = google.docs({ version: "v1", auth });
 
   const docsResponse = await docs.documents.get({
-    auth: jwt,
     documentId: documentId,
   });
 
