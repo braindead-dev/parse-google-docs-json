@@ -17,9 +17,17 @@ declare module 'parse-google-docs-json' {
       content: any[]
       metadata: {
         title: string
+        lastModified?: string
       }
     },
-    toMarkdown:()=> string
+    toMarkdown:()=> string,
+    toJsonMarkdownHybrid:()=> {
+      metadata: {
+        title: string
+        lastModified?: string
+      },
+      markdownContent: string
+    }
   }
 
   export = parseGoogleDocs

@@ -294,13 +294,148 @@ json2md.converters.footnote = function (footnote) {
 };
 
 function convertJsonToMarkdown({ content, metadata }) {
-  // Do NOT move the formatting of the following lines
-  // to prevent markdown parsing errors
-  return `---
-${YAML.stringify(metadata)}
----
-
-${json2md(content)}`;
+  // Custom markdown conversion for cleaner output
+  let markdown = '';
+  
+  // Add title and last modified date
+  if (metadata && metadata.title) {
+    markdown += `${metadata.title}\n`;
+    if (metadata.lastModified) {
+      markdown += `Last Edited: ${metadata.lastModified}\n`;
+    }
+    markdown += `---\n\n`;
+  }
+  
+  // Process content with custom formatting
+  for (let i = 0; i < content.length; i++) {
+    const item = content[i];
+    
+    // Skip empty paragraphs
+    if (item.p === "" || item.p === null) {
+      continue;
+    }
+    
+    // Handle headings
+    if (item.h1) {
+      markdown += `# ${item.h1}\n\n`;
+    } else if (item.h2) {
+      markdown += `## ${item.h2}\n\n`;
+    } else if (item.h3) {
+      markdown += `### ${item.h3}\n\n`;
+    } else if (item.h4) {
+      markdown += `#### ${item.h4}\n\n`;
+    } else if (item.h5) {
+      markdown += `##### ${item.h5}\n\n`;
+    } else if (item.p) {
+      // Check if next item is a list - if so, don't add extra spacing
+      const nextItem = content[i + 1];
+      if (nextItem && (nextItem.ul || nextItem.ol)) {
+        markdown += `${item.p}\n`;
+      } else {
+        markdown += `${item.p}\n\n`;
+      }
+    } else if (item.ul) {
+      // Handle unordered lists
+      item.ul.forEach(listItem => {
+        markdown += ` - ${listItem}\n`;
+      });
+      markdown += '\n';
+    } else if (item.ol) {
+      // Handle ordered lists
+      item.ol.forEach((listItem, index) => {
+        markdown += `${index + 1}. ${listItem}\n`;
+      });
+      markdown += '\n';
+    } else if (item.blockquote) {
+      markdown += `> ${item.blockquote}\n\n`;
+    } else if (item.img) {
+      markdown += `![${item.img.alt}](${item.img.source} "${item.img.title}")\n\n`;
+    } else if (item.table) {
+      // Handle tables
+      const headers = item.table.headers.join(' | ');
+      const separator = item.table.headers.map(() => '---').join(' | ');
+      markdown += `| ${headers} |\n| ${separator} |\n`;
+      
+      item.table.rows.forEach(row => {
+        markdown += `| ${row.join(' | ')} |\n`;
+      });
+      markdown += '\n';
+    } else if (item.footnote) {
+      markdown += `[^${item.footnote.number}]: ${item.footnote.text}\n`;
+    }
+  }
+  
+  return markdown.trim();
 }
 
-module.exports = { convertGoogleDocumentToJson, convertJsonToMarkdown };
+function convertToJsonMarkdownHybrid({ content, metadata }) {
+  // Create markdown content without the title/date header
+  let markdownContent = '';
+  
+  // Process content with custom formatting (same as convertJsonToMarkdown but without header)
+  for (let i = 0; i < content.length; i++) {
+    const item = content[i];
+    
+    // Skip empty paragraphs
+    if (item.p === "" || item.p === null) {
+      continue;
+    }
+    
+    // Handle headings
+    if (item.h1) {
+      markdownContent += `# ${item.h1}\n\n`;
+    } else if (item.h2) {
+      markdownContent += `## ${item.h2}\n\n`;
+    } else if (item.h3) {
+      markdownContent += `### ${item.h3}\n\n`;
+    } else if (item.h4) {
+      markdownContent += `#### ${item.h4}\n\n`;
+    } else if (item.h5) {
+      markdownContent += `##### ${item.h5}\n\n`;
+    } else if (item.p) {
+      // Check if next item is a list - if so, don't add extra spacing
+      const nextItem = content[i + 1];
+      if (nextItem && (nextItem.ul || nextItem.ol)) {
+        markdownContent += `${item.p}\n`;
+      } else {
+        markdownContent += `${item.p}\n\n`;
+      }
+    } else if (item.ul) {
+      // Handle unordered lists
+      item.ul.forEach(listItem => {
+        markdownContent += ` - ${listItem}\n`;
+      });
+      markdownContent += '\n';
+    } else if (item.ol) {
+      // Handle ordered lists
+      item.ol.forEach((listItem, index) => {
+        markdownContent += `${index + 1}. ${listItem}\n`;
+      });
+      markdownContent += '\n';
+    } else if (item.blockquote) {
+      markdownContent += `> ${item.blockquote}\n\n`;
+    } else if (item.img) {
+      markdownContent += `![${item.img.alt}](${item.img.source} "${item.img.title}")\n\n`;
+    } else if (item.table) {
+      // Handle tables
+      const headers = item.table.headers.join(' | ');
+      const separator = item.table.headers.map(() => '---').join(' | ');
+      markdownContent += `| ${headers} |\n| ${separator} |\n`;
+      
+      item.table.rows.forEach(row => {
+        markdownContent += `| ${row.join(' | ')} |\n`;
+      });
+      markdownContent += '\n';
+    } else if (item.footnote) {
+      markdownContent += `[^${item.footnote.number}]: ${item.footnote.text}\n`;
+    }
+  }
+  
+  // Return JSON structure with metadata and markdown content
+  return {
+    metadata: metadata || {},
+    markdownContent: markdownContent.trim()
+  };
+}
+
+module.exports = { convertGoogleDocumentToJson, convertJsonToMarkdown, convertToJsonMarkdownHybrid };
